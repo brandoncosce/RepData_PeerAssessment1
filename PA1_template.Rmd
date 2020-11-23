@@ -24,6 +24,7 @@ library(dplyr)
 ```{r mean}
 activity <- activity %>% group_by(date)
 asm <- activity %>% summarise(total_steps = sum(steps))
+hist(asm$total_steps)
 mean(asm$total_steps, na.rm = TRUE)
 median(asm$total_steps, na.rm = TRUE)
 ```

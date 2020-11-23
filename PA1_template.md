@@ -11,6 +11,13 @@ output:
 
 ```r
 dir.create("data")
+```
+
+```
+## Warning in dir.create("data"): 'data' already exists
+```
+
+```r
 download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", 
               "./data/download.zip")
 unzip("./data/download.zip", exdir = "./data")
@@ -46,6 +53,12 @@ asm <- activity %>% summarise(total_steps = sum(steps))
 ```
 ## `summarise()` ungrouping output (override with `.groups` argument)
 ```
+
+```r
+hist(asm$total_steps)
+```
+
+![](PA1_template_files/figure-html/mean-1.png)<!-- -->
 
 ```r
 mean(asm$total_steps, na.rm = TRUE)
