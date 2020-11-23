@@ -8,18 +8,85 @@ output:
 
 ## Loading and preprocessing the data
 
-
+```{r data}
+dir.create("data")
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", 
+              "./data/download.zip")
+unzip("./data/download.zip", exdir = "./data")
+activity <- read.csv("./data/activity.csv")
+library(dplyr)
+```
 
 ## What is mean total number of steps taken per day?
 
-
+```{r mean}
+activity <- activity %>% group_by(date)
+asm <- activity %>% summarise(total_steps = sum(steps))
+mean(asm$total_steps, na.rm = TRUE)
+median(asm$total_steps, na.rm = TRUE)
+```
 
 ## What is the average daily activity pattern?
 
+```{r activity}
 
+activity <- activity %>% group_by(interval)
+activity.comp <- complete.cases(activity)
+activity.c <- activity[activity.comp,]
+asi <- activity.c %>% summarise(total_steps = sum(steps))
+plot(asi$interval, asi$total_steps, type = "l", col = "red")
+asi[asi$total_steps == max(asi),]
+
+```
 
 ## Imputing missing values
 
+```{r missing values}
+sum(is.na(activity))
+activity.m <- activity %>% group_by(interval)
+adm <- activity.m %>% summarise(steps_mean = mean(steps, na.rm = TRUE))
+adm$steps_mean <- c(round(adm$steps_mean))
+ for (i in 1:nrow(activity.m)){
+   if (isTRUE(is.na(activity.m[i,1]))) {
+     activity.m[i,1] <- c(adm[adm$interval == activity.m$interval[i],2])
+   }
+ }
+
+activity.m <- activity.m %>% group_by(date)
+ams <- activity.m %>% summarise(steps_sum = sum(steps))
+mean(ams$steps_sum)
+median(ams$steps_sum)
+
+hist(ams$steps_sum)
+
+
+```
+
+The impact of removing NA's from the orginal dataset was a decrease in both mean and median values when compared to the dataset where NA's were replaced with rounded mean values.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+
+```{r weekdays}
+library(lubridate)
+activity.m <- bind_cols(activity.m,
+                        as.character(c(rep(NA,nrow(activity.m)))))
+names(activity.m)[4] <- "day_type"
+activity.m$date <- ymd(activity.m$date)
+wdv <- unique(weekdays(activity.m$date))[1:5] 
+for (i in 1:nrow(activity.m)){
+   if (weekdays(activity.m[[i,"date"]]) %in% wdv) {
+      activity.m[[i,"day_type"]] <- c("weekday")
+   }else{activity.m[[i,"day_type"]] <- c("weekend")}
+}
+activity.m$day_type <- as.factor(activity.m$day_type)
+```
+
+```{r weekday timeseries}
+library(lattice)
+activity.m <- activity.m %>% group_by(interval,day_type)
+ams <- activity.m %>% summarise(steps_mean = sum(steps))
+xyplot(steps_mean ~ interval | day_type, data = ams, type = "l")
+
+```
